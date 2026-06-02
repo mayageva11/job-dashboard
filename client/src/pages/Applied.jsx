@@ -224,8 +224,9 @@ export default function Applied() {
   const [counts, setCounts]             = useState({});
   const [activeTab, setActiveTab]       = useState('all');
   const [loading, setLoading]           = useState(true);
-  const [modal, setModal]               = useState(null); // 'add' | { type: 'delete', app }
+  const [modal, setModal]               = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [syncing, setSyncing]           = useState(false);
 
   function openModal(m) { setActiveDropdown(null); setModal(m); }
   function closeModal() { setModal(null); }
@@ -253,6 +254,24 @@ export default function Applied() {
       const { data } = await axios.get(`${API_BASE_URL}/api/applied/counts`);
       setCounts(data);
     } catch { toast.error('Could not update status.'); }
+  }
+
+  async function handleGmailSync() {
+    setSyncing(true);
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/gmail/sync-trigger`);
+      const { count } = res.data;
+      if (count > 0) {
+        toast.success(`${count} application${count > 1 ? 's' : ''} updated from Gmail!`);
+        await loadData();
+      } else {
+        toast('No new status updates found in Gmail.', { icon: '📭' });
+      }
+    } catch {
+      toast.error('Gmail sync failed. Make sure the Gmail MCP is connected.');
+    } finally {
+      setSyncing(false);
+    }
   }
 
   async function handleDelete(id) {
@@ -293,6 +312,19 @@ export default function Applied() {
             Track every role you&apos;ve applied to
           </p>
         </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={handleGmailSync} disabled={syncing}
+            style={{ background: 'transparent', border: '1px solid #1e1e1e', color: syncing ? '#6b7280' : '#9ca3af', borderRadius: '8px', padding: '9px 16px', fontSize: '13px', fontWeight: 500, cursor: syncing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 120ms' }}
+            onMouseEnter={(e) => { if (!syncing) { e.currentTarget.style.borderColor = '#16a34a'; e.currentTarget.style.color = '#16a34a'; } }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1e1e1e'; e.currentTarget.style.color = '#9ca3af'; }}
+          >
+            {syncing ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity="0.25"/><path d="M21 12a9 9 0 00-9-9"/></svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            )}
+            {syncing ? 'Syncing…' : 'Sync Gmail'}
+          </button>
         <button onClick={() => openModal('add')}
           style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: '#fff', border: 'none', borderRadius: '8px', padding: '9px 18px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
@@ -301,7 +333,9 @@ export default function Applied() {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
           Add Application
         </button>
+        </div>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Stat cards */}
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>

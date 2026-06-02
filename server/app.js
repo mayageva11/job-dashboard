@@ -124,6 +124,18 @@ app.get('/api/errors', (req, res) => {
   res.json(db.getRecentErrors(ERRORS_LIMIT));
 });
 
+app.post('/api/gmail/sync', (req, res) => {
+  const { emails } = req.body;
+  if (!Array.isArray(emails)) return res.status(400).json({ error: 'emails array required' });
+  const { syncEmails } = require('./gmail-sync');
+  const updates = syncEmails(emails);
+  res.json({ updates, count: updates.length });
+});
+
+app.post('/api/gmail/sync-trigger', (req, res) => {
+  res.json({ count: 0, message: 'Run "Sync Gmail" from Claude Code to scan your inbox.' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
