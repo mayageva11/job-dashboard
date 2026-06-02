@@ -290,7 +290,7 @@ export default function Applied() {
             Applications
           </h1>
           <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>
-            Track every role you've applied to
+            Track every role you&apos;ve applied to
           </p>
         </div>
         <button onClick={() => openModal('add')}

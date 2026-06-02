@@ -105,7 +105,7 @@ export default function Dashboard() {
     if (fetched.current) return;
     fetched.current = true;
     loadData(false);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleScrape() {
     setScraping(true);
