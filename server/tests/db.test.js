@@ -30,12 +30,29 @@ describe('jobs CRUD', () => {
     expect(found).toBeTruthy();
   });
 
-  test('getJobs returns only Israeli jobs above threshold', () => {
-    const jobs = db.getJobs(false);
+  test('getJobs returns only non-dismissed non-applied Israeli jobs by default', () => {
+    const jobs = db.getJobs();
     expect(Array.isArray(jobs)).toBe(true);
     jobs.forEach((j) => {
       expect(j.dismissed).toBe(0);
+      expect(j.applied).toBe(0);
     });
+  });
+
+  test('markJobAsApplied hides job from default getJobs', () => {
+    const job = db.findJobByUrl(sample.url);
+    db.markJobAsApplied(job.id);
+    const visible = db.getJobs().map((j) => j.id);
+    expect(visible).not.toContain(job.id);
+    db.unmarkJobAsApplied(job.id);
+  });
+
+  test('unmarkJobAsApplied restores job to getJobs', () => {
+    const job = db.findJobByUrl(sample.url);
+    db.markJobAsApplied(job.id);
+    db.unmarkJobAsApplied(job.id);
+    const visible = db.getJobs().map((j) => j.id);
+    expect(visible).toContain(job.id);
   });
 
   test('dismissJob and undismissJob', () => {

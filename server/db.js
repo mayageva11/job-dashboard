@@ -15,6 +15,7 @@ db.exec(`
     source      TEXT,
     match_score REAL,
     dismissed   INTEGER DEFAULT 0,
+    applied     INTEGER DEFAULT 0,
     scraped_at  DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -37,15 +38,12 @@ db.exec(`
   );
 `);
 
-// Migrate existing applications table if columns are missing
+// Migrate existing tables if columns are missing
 ['title', 'company', 'url', 'location'].forEach((col) => {
-  try {
-    db.exec(`ALTER TABLE applications ADD COLUMN ${col} TEXT`);
-  } catch (_) {}
+  try { db.exec(`ALTER TABLE applications ADD COLUMN ${col} TEXT`); } catch (_) {}
 });
-try {
-  db.exec(`UPDATE applications SET status = 'applied' WHERE status = 'manual'`);
-} catch (_) {}
+try { db.exec(`ALTER TABLE jobs ADD COLUMN applied INTEGER DEFAULT 0`); } catch (_) {}
+try { db.exec(`UPDATE applications SET status = 'applied' WHERE status = 'manual'`); } catch (_) {}
 
 function findJobByUrl(url) {
   return db.prepare('SELECT id FROM jobs WHERE url = ?').get(url);
@@ -68,10 +66,11 @@ function insertJob(job) {
   `).run(job);
 }
 
-function getJobs(showDismissed) {
+function getJobs({ showDismissed = false, showApplied = false } = {}) {
   const dismissedClause = showDismissed ? '' : 'AND dismissed = 0';
+  const appliedClause   = showApplied   ? '' : 'AND applied = 0';
   return db.prepare(`
-    SELECT id, title, company, location, url, source, match_score, dismissed, scraped_at
+    SELECT id, title, company, location, url, source, match_score, dismissed, applied, scraped_at
     FROM jobs
     WHERE (
       LOWER(location) LIKE '%israel%'
@@ -89,8 +88,17 @@ function getJobs(showDismissed) {
       OR LOWER(location) LIKE '%givatayim%'
     )
     ${dismissedClause}
+    ${appliedClause}
     ORDER BY match_score DESC
   `).all();
+}
+
+function markJobAsApplied(id) {
+  db.prepare('UPDATE jobs SET applied = 1 WHERE id = ?').run(id);
+}
+
+function unmarkJobAsApplied(id) {
+  db.prepare('UPDATE jobs SET applied = 0 WHERE id = ?').run(id);
 }
 
 function getJobById(id) {
@@ -159,7 +167,8 @@ function getJobCount() {
     ? db.prepare("SELECT COUNT(*) AS n FROM errors WHERE created_at >= ?").get(lastScrapedAt).n
     : 0;
 
-  return { total, matched, dismissed, appliedThisWeek, lastScrapedAt, lastScrapeErrorCount };
+  const appliedJobs = db.prepare('SELECT COUNT(*) AS n FROM jobs WHERE applied = 1').get().n;
+  return { total, matched, dismissed, appliedJobs, appliedThisWeek, lastScrapedAt, lastScrapeErrorCount };
 }
 
 function deleteApplication(id) {
@@ -183,6 +192,8 @@ module.exports = {
   getJobById,
   dismissJob,
   undismissJob,
+  markJobAsApplied,
+  unmarkJobAsApplied,
   insertApplication,
   insertManualApplication,
   updateApplicationStatus,

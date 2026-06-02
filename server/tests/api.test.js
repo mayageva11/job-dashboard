@@ -39,6 +39,12 @@ describe('GET /api/jobs', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
   });
+
+  test('accepts showApplied query param', async () => {
+    const res = await request(app).get('/api/jobs?showApplied=1');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
 });
 
 describe('GET /api/jobs/count', () => {

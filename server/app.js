@@ -25,7 +25,8 @@ app.use(globalLimiter);
 
 app.get('/api/jobs', (req, res) => {
   const showDismissed = req.query.showDismissed === '1';
-  res.json(db.getJobs(showDismissed));
+  const showApplied   = req.query.showApplied   === '1';
+  res.json(db.getJobs({ showDismissed, showApplied }));
 });
 
 app.get('/api/jobs/count', (req, res) => {
@@ -65,6 +66,7 @@ app.post('/api/apply/:id', (req, res) => {
   const job = db.getJobById(id);
   if (!job) return res.status(404).json({ error: 'Job not found' });
   db.insertApplication(id);
+  db.markJobAsApplied(id);
   res.json({
     url:      job.url,
     name:     process.env.APPLY_NAME,

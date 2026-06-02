@@ -27,7 +27,7 @@ function CompanyInitial({ company }) {
   );
 }
 
-export default function JobCard({ job, showDismissed, onDismiss, onUndismiss }) {
+export default function JobCard({ job, showDismissed, onDismiss, onUndismiss, onApplied }) {
   const [exiting, setExiting] = useState(false);
   const src = SOURCE_META[job.source] || { label: job.source, color: '#6b7280' };
 
@@ -38,7 +38,9 @@ export default function JobCard({ job, showDismissed, onDismiss, onUndismiss }) 
       await navigator.clipboard.writeText(
         `Name: ${data.name}\nEmail: ${data.email}\nPhone: ${data.phone}\nLinkedIn: ${data.linkedin}`
       );
-      toast.success('Opened job. Details copied to clipboard.');
+      toast.success('Applied! Job moved to Applied page.');
+      setExiting(true);
+      setTimeout(() => onApplied && onApplied(job.id), 150);
     } catch {
       toast.error('Could not open job.');
     }

@@ -118,6 +118,10 @@ export default function Dashboard() {
     } finally { setScraping(false); }
   }
 
+  function handleApplied(id) {
+    setAllJobs((p) => p.filter((j) => j.id !== id));
+  }
+
   async function handleDismiss(id) {
     try {
       await axios.post(`${API_BASE_URL}/api/jobs/${id}/dismiss`);
@@ -234,7 +238,7 @@ export default function Dashboard() {
           {visible.length === 0
             ? <EmptyState showDismissed={showDismissed} onScrape={handleScrape} scraping={scraping} />
             : visible.map((job) => (
-                <JobCard key={job.id} job={job} showDismissed={showDismissed} onDismiss={handleDismiss} onUndismiss={handleUndismiss} />
+                <JobCard key={job.id} job={job} showDismissed={showDismissed} onDismiss={handleDismiss} onUndismiss={handleUndismiss} onApplied={handleApplied} />
               ))
           }
         </div>
