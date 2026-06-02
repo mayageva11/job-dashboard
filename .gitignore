@@ -1,0 +1,8 @@
+node_modules/
+server/.env
+server/jobs.db
+server/jobs-test.db
+client/dist/
+.DS_Store
+*.log
+coverage/

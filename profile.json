@@ -1,0 +1,52 @@
+{
+  "skills": [
+    { "keyword": "playwright",         "weight": 3 },
+    { "keyword": "typescript",         "weight": 3 },
+    { "keyword": "api testing",        "weight": 3 },
+    { "keyword": "e2e testing",        "weight": 2 },
+    { "keyword": "e2e",                "weight": 2 },
+    { "keyword": "automation",         "weight": 2 },
+    { "keyword": "regression testing", "weight": 2 },
+    { "keyword": "regression",         "weight": 2 },
+    { "keyword": "ci/cd",              "weight": 2 },
+    { "keyword": "python",             "weight": 2 },
+    { "keyword": "javascript",         "weight": 2 },
+    { "keyword": "rest",               "weight": 2 },
+    { "keyword": "jira",               "weight": 2 },
+    { "keyword": "git",                "weight": 2 },
+    { "keyword": "agile",              "weight": 1 },
+    { "keyword": "scrum",              "weight": 1 },
+    { "keyword": "postman",            "weight": 1 },
+    { "keyword": "selenium",           "weight": 1 },
+    { "keyword": "testing",            "weight": 1 },
+    { "keyword": "qa",                 "weight": 1 },
+    { "keyword": "test plan",          "weight": 1 },
+    { "keyword": "web application",    "weight": 1 },
+    { "keyword": "aws",                "weight": 1 }
+  ],
+  "titles": [
+    "qa automation",
+    "automation engineer",
+    "automation tester",
+    "qa engineer",
+    "quality assurance",
+    "software engineer",
+    "software developer",
+    "junior developer",
+    "junior software",
+    "sdet",
+    "test engineer",
+    "frontend developer",
+    "fullstack developer"
+  ],
+  "negative_words": [
+    "senior",
+    "lead",
+    "manager",
+    "director",
+    "principal",
+    "staff engineer",
+    "head of"
+  ],
+  "experience_years": 1.5
+}

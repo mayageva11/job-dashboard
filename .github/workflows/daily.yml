@@ -1,0 +1,39 @@
+name: Daily Health Check
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # Every day at 06:00 UTC (08:00 Israel time)
+  workflow_dispatch:        # Allow manual trigger from GitHub UI
+
+jobs:
+  health-check:
+    name: Health Check & Regression Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full test suite
+        run: npm test -- --ci --forceExit --verbose
+
+      - name: Run health-check tests only
+        run: npm run test:health -- --ci --forceExit --verbose
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Daily health check FAILED at $(date -u '+%Y-%m-%d %H:%M UTC')"
+          echo "Check the Actions tab for details."
