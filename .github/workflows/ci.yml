@@ -136,6 +136,7 @@ jobs:
           APPLY_NAME: Test User
           APPLY_EMAIL: test@test.com
           APPLY_PHONE: "+972000000000"
+          APPLY_LINKEDIN: https://linkedin.com/in/test
           NOTIFY_EMAIL: test@test.com
           SMTP_HOST: smtp.gmail.com
           SMTP_PORT: "587"
