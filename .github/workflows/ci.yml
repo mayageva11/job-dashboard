@@ -96,3 +96,64 @@ jobs:
           name: client-dist
           path: client/dist/
           retention-days: 7
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [build-client, test-server]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            server/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install client dependencies
+        run: npm ci --prefix client
+
+      - name: Install server dependencies
+        run: npm ci --prefix server
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+          ADZUNA_APP_ID: dummy
+          ADZUNA_APP_KEY: dummy
+          APPLY_NAME: Test User
+          APPLY_EMAIL: test@test.com
+          APPLY_PHONE: "+972000000000"
+          NOTIFY_EMAIL: test@test.com
+          SMTP_HOST: smtp.gmail.com
+          SMTP_PORT: "587"
+          SMTP_USER: test@test.com
+          SMTP_PASS: dummy
+          RAPIDAPI_KEY: dummy
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: e2e/screenshots/
