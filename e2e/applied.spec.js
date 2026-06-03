@@ -9,11 +9,14 @@ const FAKE_APPS = [
 const FAKE_COUNTS = { total: 3, applied: 1, interview: 1, rejected: 1, accepted: 0 };
 
 async function mockAppliedApi(page, { apps = FAKE_APPS, counts = FAKE_COUNTS } = {}) {
-  await page.route('**/api/applied*', (route) => {
-    const url = route.request().url();
-    if (url.includes('/counts')) return route.fulfill({ json: counts });
-    return route.fulfill({ json: apps });
-  });
+  await page.route(
+    (url) => url.pathname === '/api/applied' || url.pathname.startsWith('/api/applied/'),
+    (route) => {
+      const { pathname } = new URL(route.request().url());
+      if (pathname.endsWith('/counts')) return route.fulfill({ json: counts });
+      return route.fulfill({ json: apps });
+    }
+  );
 }
 
 // 10. Applied page loads

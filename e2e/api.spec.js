@@ -5,10 +5,16 @@ test('POST /api/scrape returns 429 after rate limit is reached', async ({ reques
   test.setTimeout(90000);
 
   // Keep sending until we hit a 429 (rate limit: 5 per 15 min).
-  // Don't assume a clean window — previous runs in the same session may have consumed slots.
+  // Use a short per-request timeout: 429 arrives instantly (rate limiter runs before the handler),
+  // while real scrape work can be slow locally. Timed-out requests still increment the counter.
   const statuses = [];
   for (let i = 0; i < 10; i++) {
-    const res = await request.post('http://localhost:3001/api/scrape');
+    let res;
+    try {
+      res = await request.post('http://localhost:3001/api/scrape', { timeout: 8000 });
+    } catch {
+      continue; // timed out — not a 429, counter was still incremented server-side
+    }
     statuses.push(res.status());
     if (res.status() === 429) break;
   }

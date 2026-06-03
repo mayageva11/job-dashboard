@@ -12,13 +12,16 @@ const FAKE_JOBS = [
 ];
 
 async function mockJobsApi(page, { jobs = FAKE_JOBS, dismissedJobs = [] } = {}) {
-  await page.route('**/api/jobs*', (route) => {
-    const url = route.request().url();
-    if (url.includes('/count')) return route.fulfill({ json: FAKE_COUNTS });
-    if (url.includes('/dismiss') || url.includes('/undismiss')) return route.fulfill({ json: { ok: true } });
-    const params = new URL(url).searchParams;
-    return route.fulfill({ json: params.get('showDismissed') === '1' ? dismissedJobs : jobs });
-  });
+  // Use URL predicate to reliably match /api/jobs, /api/jobs?*, /api/jobs/count, /api/jobs/:id/dismiss etc.
+  await page.route(
+    (url) => url.pathname === '/api/jobs' || url.pathname.startsWith('/api/jobs/'),
+    (route) => {
+      const { pathname, searchParams } = new URL(route.request().url());
+      if (pathname.endsWith('/count')) return route.fulfill({ json: FAKE_COUNTS });
+      if (pathname.includes('/dismiss') || pathname.includes('/undismiss')) return route.fulfill({ json: { ok: true } });
+      return route.fulfill({ json: searchParams.get('showDismissed') === '1' ? dismissedJobs : jobs });
+    }
+  );
 }
 
 // 1. Page loads correctly
@@ -43,7 +46,7 @@ test('stats bar shows 4 stat cards', async ({ page }) => {
 // 3. Scrape Now button exists and is clickable
 test('scrape now button is visible and enabled', async ({ page }) => {
   await mockJobsApi(page);
-  await page.route('**/api/scrape', (route) => route.fulfill({ json: { ok: true } }));
+  await page.route((url) => url.pathname === '/api/scrape', (route) => route.fulfill({ json: { ok: true } }));
   await page.goto('/');
 
   const btn = page.getByRole('button', { name: 'Scrape Now' });
@@ -51,9 +54,8 @@ test('scrape now button is visible and enabled', async ({ page }) => {
   await expect(btn).toBeEnabled();
 
   await btn.click();
-  await expect(
-    page.getByRole('button', { name: /Scraping/i }).or(page.getByText('Scrape complete!'))
-  ).toBeVisible({ timeout: 5000 });
+  // The mock returns instantly so 'Scraping…' is fleeting; assert the toast instead
+  await expect(page.getByText('Scrape complete!')).toBeVisible({ timeout: 5000 });
 });
 
 // 4. Show Dismissed toggle works
@@ -107,8 +109,9 @@ test('job cards show title, company, match badge', async ({ page }) => {
 // 7. Apply button behavior
 test('clicking Apply shows toast', async ({ page }) => {
   await mockJobsApi(page);
-  await page.route('**/api/apply/**', (route) =>
-    route.fulfill({
+  await page.route(
+    (url) => url.pathname.startsWith('/api/apply/'),
+    (route) => route.fulfill({
       json: { url: 'https://example.com/1', name: 'Test User', email: 'test@test.com', phone: '+972000000000', linkedin: '' },
     })
   );
@@ -132,7 +135,7 @@ test('dismiss removes card from view', async ({ page }) => {
 // 9. Empty state renders when no jobs
 test('empty state shows when no matching jobs', async ({ page }) => {
   await mockJobsApi(page, { jobs: [] });
-  await page.route('**/api/scrape', (route) => route.fulfill({ json: { ok: true } }));
+  await page.route((url) => url.pathname === '/api/scrape', (route) => route.fulfill({ json: { ok: true } }));
   await page.goto('/');
 
   await expect(page.getByText('No matching jobs yet')).toBeVisible();
