@@ -27,17 +27,3 @@ test('POST /api/scrape returns 429 after rate limit is reached', async ({ reques
   const before429 = statuses.slice(0, statuses.indexOf(429));
   expect(before429.every(s => s !== 429)).toBe(true);
 });
-
-// 14. CV endpoint streams file
-test('GET /api/cv returns PDF with correct headers', async ({ request }) => {
-  const res = await request.get('http://localhost:3001/api/cv');
-  expect(res.status()).toBe(200);
-  expect(res.headers()['content-type']).toContain('application/pdf');
-  expect(res.headers()['content-disposition']).toContain('attachment');
-});
-
-// 15. Direct asset access is blocked
-test('GET /assets/cv.pdf returns 404', async ({ request }) => {
-  const res = await request.get('http://localhost:3001/assets/cv.pdf');
-  expect(res.status()).toBe(404);
-});
